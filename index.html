@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="en-CA">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slope Is a Rate: Math 2201</title>
+<style>
+  :root{
+    --ink:#1c2430; --muted:#5a6572; --accent:#0b5cad; --accent-dark:#084a8a;
+    --ok:#177245; --bad:#b3261e; --card:#ffffff; --bg:#eef2f6; --line:#d4dce4;
+    --soft:#f4f8fc; --warm:#b45309;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);line-height:1.45;}
+  .wrap{max-width:1020px;margin:0 auto;padding:16px 14px 48px;}
+  header{margin:10px 0 14px;}
+  h1{font-size:1.7rem;margin:0 0 2px;}
+  h2{font-size:1.3rem;margin:0 0 6px;}
+  h3{font-size:1.08rem;margin:0 0 8px;}
+  .subtitle{color:var(--muted);font-size:1rem;margin:0 0 8px;}
+  .instruction{font-size:1.02rem;margin:0;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:16px;margin:14px 0;box-shadow:0 1px 3px rgba(20,40,60,.06);}
+  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .controls .spacer{flex:1;}
+  button,select,input{font:inherit;}
+  select,input[type="text"],input[type="number"]{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;min-height:44px;}
+  button{cursor:pointer;border:1px solid var(--accent);background:var(--accent);color:#fff;
+    padding:9px 16px;border-radius:8px;min-height:44px;font-weight:600;}
+  button:hover{background:var(--accent-dark);}
+  button.secondary{background:#fff;color:var(--accent);}
+  button.secondary:hover{background:var(--soft);}
+  button.selected{background:var(--accent);color:#fff;}
+  button:disabled{opacity:.55;cursor:default;}
+  button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:3px solid #f2b01e;outline-offset:2px;}
+  .modebtn{border:1px solid var(--accent);border-radius:8px;padding:9px 14px;min-height:44px;font-weight:600;color:var(--accent);background:#fff;cursor:pointer;}
+  .modebtn[aria-pressed="true"]{background:var(--accent);color:#fff;}
+  svg.chart{width:100%;height:auto;display:block;background:#fff;border:1px solid var(--line);border-radius:8px;}
+  svg.chart.small{max-width:520px;}
+  .seghit{cursor:pointer;}
+  .segbtns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0;}
+  .fieldsrow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-top:12px;}
+  .field{display:flex;flex-direction:column;gap:3px;}
+  .field label{font-size:.88rem;color:var(--muted);font-weight:600;}
+  .field input.numin{width:130px;}
+  .field input.timein,.field input.distin{width:120px;}
+  .unitlab{font-weight:600;padding-bottom:10px;}
+  .feedback{margin:10px 0 0;font-weight:600;min-height:1.3em;}
+  .feedback.ok{color:var(--ok);}
+  .feedback.bad{color:var(--bad);}
+  .feedback ul{margin:6px 0 0;padding-left:20px;font-weight:400;}
+  .feedback li{margin:4px 0;}
+  table.data{border-collapse:collapse;width:100%;font-size:.95rem;margin:8px 0 0;}
+  table.data th,table.data td{border:1px solid var(--line);padding:5px 8px;text-align:left;}
+  table.data th{background:var(--soft);}
+  .twocol{display:flex;gap:18px;align-items:flex-start;}
+  .twocol .grow{flex:1 1 auto;min-width:0;}
+  .taskbox{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:14px 0 0;background:#fff;}
+  .taskbox h3{margin:0 0 4px;}
+  .taskbox p{margin:4px 0;}
+  .hint{color:var(--muted);font-size:.94rem;}
+  .legslist{margin:6px 0;padding-left:22px;}
+  .legslist li{margin:4px 0;}
+  input[type="range"]{width:min(420px,100%);min-height:44px;accent-color:var(--accent);}
+  .hidden{display:none !important;}
+  .printsheet h2{margin-bottom:2px;}
+  .printsheet .meta{color:var(--muted);margin:0 0 8px;}
+  @media (max-width:680px){
+    .twocol{flex-direction:column;}
+    h1{font-size:1.4rem;}
+  }
+  @media print{
+    body{background:#fff;}
+    .wrap{max-width:none;margin:0;padding:0;}
+    header,.controls,#readSection,#drawSection{display:none !important;}
+    #printSheet{display:block !important;border:none;box-shadow:none;margin:0;padding:0;}
+    #printSheet .no-print{display:none !important;}
+    table.data th{background:#fff;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Slope Is a Rate</h1>
+    <p class="subtitle">Math 2201, Unit 6: Proportional Reasoning (indicators 6.15, 6.18, 6.19)</p>
+    <p class="instruction">On a distance and time graph, the steepness of each segment is a rate: change in distance divided by change in time. Practise reading rates off a graph, then draw a graph from a described rate. This is practice only, and nothing you enter leaves this page.</p>
+  </header>
+
+  <div class="card controls no-print" role="group" aria-label="Activity controls">
+    <button type="button" class="modebtn" id="modeReadBtn" aria-pressed="true">Read and Rank</button>
+    <button type="button" class="modebtn" id="modeDrawBtn" aria-pressed="false">Draw a Graph</button>
+    <span class="spacer"></span>
+    <button type="button" id="printBtnTop" class="secondary">Print graph analysis</button>
+  </div>
+
+  <main>
+  <section id="readSection">
+    <div class="card">
+      <h2 id="graphTitle"></h2>
+      <p id="graphContext"></p>
+      <svg class="chart" id="readChart" viewBox="0 0 720 420" role="img" aria-label="Segmented distance and time graph"></svg>
+      <div class="segbtns" id="segBtns" role="group" aria-label="Choose a segment"></div>
+      <p class="hint">Choose a segment with the buttons above, from the list, or by selecting its line on the graph. The table below gives the same information as the graph, in numbers.</p>
+      <h3>Waypoints on the graph</h3>
+      <table class="data" id="waypointTable" aria-label="Waypoints"></table>
+      <div class="controls" style="margin-top:12px;">
+        <button type="button" id="newGraphBtn">New graph</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Work with the segments</h2>
+
+      <div class="taskbox">
+        <h3>Task 1: Calculate a rate</h3>
+        <p>Pick a segment, read the change in distance and the change in time from its two ends, then divide.</p>
+        <div class="fieldsrow">
+          <div class="field">
+            <label for="rateSegSelect">Segment</label>
+            <select id="rateSegSelect"></select>
+          </div>
+          <div class="field">
+            <label for="rateInput">Rate for this segment</label>
+            <input type="text" inputmode="decimal" class="numin" id="rateInput" autocomplete="off">
+          </div>
+          <span class="unitlab" id="rateUnitLab"></span>
+          <button type="button" id="checkRateBtn">Check my rate</button>
+        </div>
+        <p class="feedback" id="rateFeedback" aria-live="polite"></p>
+      </div>
+
+      <div class="taskbox">
+        <h3>Task 2: Fastest, and stopped</h3>
+        <p>Steepness is speed. A flat segment means the distance is not changing, so the rate is zero.</p>
+        <div class="fieldsrow">
+          <div class="field">
+            <label for="fastestSelect">Fastest segment</label>
+            <select id="fastestSelect"></select>
+          </div>
+          <div class="field">
+            <label for="stoppedSelect">Stopped segment</label>
+            <select id="stoppedSelect"></select>
+          </div>
+          <button type="button" id="checkPicksBtn">Check my choices</button>
+        </div>
+        <p class="feedback" id="picksFeedback" aria-live="polite"></p>
+      </div>
+
+      <div class="taskbox">
+        <h3>Task 3: Match a rate by steepness</h3>
+        <p id="matchText"></p>
+        <svg class="chart small" id="matchChart" viewBox="0 0 520 300" role="img" aria-label="Adjustable line for matching a rate"></svg>
+        <div class="fieldsrow">
+          <div class="field">
+            <label for="riseRange" id="riseLabel">Distance travelled</label>
+            <input type="range" id="riseRange" min="0" max="100" step="5" value="0">
+          </div>
+          <span class="unitlab" id="riseReadout"></span>
+          <button type="button" id="checkMatchBtn">Check my line</button>
+          <button type="button" id="newMatchBtn" class="secondary">New target rate</button>
+        </div>
+        <p class="feedback" id="matchFeedback" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <section id="drawSection" class="hidden">
+    <div class="card">
+      <h2 id="drawTitle"></h2>
+      <p id="drawIntro"></p>
+      <ol class="legslist" id="drawLegsList"></ol>
+      <p class="hint" id="drawSnapHint"></p>
+      <svg class="chart" id="drawChart" viewBox="0 0 720 420" role="img" aria-label="Grid for drawing your graph. Use the number inputs below if you prefer the keyboard."></svg>
+      <div class="controls" style="margin-top:12px;">
+        <button type="button" id="undoPointBtn" class="secondary">Undo last point</button>
+        <button type="button" id="clearDrawBtn" class="secondary">Clear</button>
+        <button type="button" id="checkDrawBtn">Check my graph</button>
+        <button type="button" id="newDrawBtn">New described trip</button>
+      </div>
+      <p class="feedback" id="drawStatus" aria-live="polite"></p>
+      <div class="feedback" id="drawFeedback" aria-live="polite"></div>
+    </div>
+    <div class="card">
+      <h2>Keyboard way to place points</h2>
+      <p>Enter the time and distance for the end of each leg, in order, then choose Use these values. The first point is always the start, at time 0 and distance 0.</p>
+      <div id="drawInputs"></div>
+      <div class="controls" style="margin-top:12px;">
+        <button type="button" id="applyInputsBtn">Use these values</button>
+      </div>
+      <p class="feedback" id="inputsFeedback" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <section class="card printsheet" id="printSheet" aria-label="Printable graph analysis">
+    <h2>Printable Graph Analysis</h2>
+    <p class="meta" id="sheetMeta"></p>
+    <p id="sheetContext"></p>
+    <table class="data" id="sheetTable" aria-label="Segment analysis"></table>
+    <p id="sheetPicks"></p>
+    <p id="sheetRanking"></p>
+    <p class="hint">Keep this sheet in your portfolio. It shows the graph you worked on, the rates you entered, and the checked rates.</p>
+    <div class="controls no-print">
+      <button type="button" id="printBtn">Print this sheet</button>
+    </div>
+  </section>
+  </main>
+</div>
+
+<script>
+"use strict";
+// ==GENERATOR==
+// Pure generator and checker logic for Slope Is a Rate. No DOM access here.
+
+function makeRng(seed) {
+  var a = (seed >>> 0) || 2654435769;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function fmtNum(n) {
+  var r = Math.round(n * 100) / 100;
+  if (Math.abs(r - Math.round(r)) < 1e-9) return String(Math.round(r));
+  var s = (Math.round(r * 10) / 10).toString();
+  return s;
+}
+
+var TEMPLATES = [
+  { id: "delivery", title: "Delivery run",
+    context: "A delivery driver leaves the depot and makes a run across town. The graph shows the distance from the depot over time.",
+    distUnit: "km", timeUnit: "h", rateUnit: "km/h",
+    distLabel: "Distance from depot (km)", timeLabel: "Time (h)",
+    movingWord: "Travel", rates: [20, 30, 40, 50, 60, 80],
+    durations: [0.5, 1, 1.5], stoppedDurations: [0.5, 1],
+    snapTime: 0.5, snapDist: 5 },
+  { id: "hike", title: "Hike on a trail",
+    context: "A hiker walks a trail to a lookout and back toward the trailhead road. The graph shows the distance covered along the trail over time.",
+    distUnit: "km", timeUnit: "h", rateUnit: "km/h",
+    distLabel: "Distance along trail (km)", timeLabel: "Time (h)",
+    movingWord: "Walk", rates: [2, 3, 4, 5, 6],
+    durations: [0.5, 1, 1.5, 2], stoppedDurations: [0.5, 1],
+    snapTime: 0.5, snapDist: 0.5 },
+  { id: "bus", title: "Bus trip between towns",
+    context: "A bus travels between towns, with a stop along the way in some trips. The graph shows the distance from the starting town over time.",
+    distUnit: "km", timeUnit: "h", rateUnit: "km/h",
+    distLabel: "Distance from start (km)", timeLabel: "Time (h)",
+    movingWord: "Travel", rates: [30, 40, 50, 60, 70, 80],
+    durations: [0.5, 1], stoppedDurations: [0.5],
+    snapTime: 0.5, snapDist: 5 },
+  { id: "cycling", title: "Cycling ride",
+    context: "A cyclist rides a loop out of town. The graph shows the distance covered over time.",
+    distUnit: "km", timeUnit: "h", rateUnit: "km/h",
+    distLabel: "Distance covered (km)", timeLabel: "Time (h)",
+    movingWord: "Ride", rates: [12, 16, 20, 24, 28, 32],
+    durations: [0.5, 1], stoppedDurations: [0.5, 1],
+    snapTime: 0.5, snapDist: 2 },
+  { id: "tank", title: "Filling a tank",
+    context: "A tank is filled with water, sometimes in stages. The graph shows the volume of water in the tank over time. Read it the same way as a distance graph: steepness is the filling rate.",
+    distUnit: "L", timeUnit: "min", rateUnit: "L/min",
+    distLabel: "Water in tank (L)", timeLabel: "Time (min)",
+    movingWord: "Add", rates: [2, 4, 5, 8, 10, 20],
+    durations: [5, 10], stoppedDurations: [5, 10],
+    snapTime: 5, snapDist: 5 },
+  { id: "walkm", title: "Walk across the school grounds",
+    context: "A student walks across the school grounds to collect supplies. The graph shows the distance covered, in metres, over time, in minutes.",
+    distUnit: "m", timeUnit: "min", rateUnit: "m/min",
+    distLabel: "Distance covered (m)", timeLabel: "Time (min)",
+    movingWord: "Walk", rates: [40, 60, 80, 100, 120],
+    durations: [5, 10], stoppedDurations: [5],
+    snapTime: 5, snapDist: 100 }
+];
+
+function pickR(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
+
+function shuffledCopy(rng, arr) {
+  var out = arr.slice();
+  for (var i = out.length - 1; i > 0; i--) {
+    var j = Math.floor(rng() * (i + 1));
+    var t = out[i]; out[i] = out[j]; out[j] = t;
+  }
+  return out;
+}
+
+function segmentRate(p1, p2) {
+  var dt = p2.t - p1.t;
+  if (dt === 0) return 0;
+  return (p2.d - p1.d) / dt;
+}
+
+function buildJourney(rng, tpl, nSeg, hasStop) {
+  var stopIdx = -1;
+  if (hasStop) {
+    if (nSeg <= 3) stopIdx = 1;
+    else stopIdx = 1 + Math.floor(rng() * (nSeg - 2));
+  }
+  var movingCount = nSeg - (hasStop ? 1 : 0);
+  var ratesPool = shuffledCopy(rng, tpl.rates);
+  var waypoints = [{ t: 0, d: 0 }];
+  var segments = [];
+  var rateCursor = 0;
+  var labels = ["A", "B", "C", "D", "E", "F"];
+  for (var i = 0; i < nSeg; i++) {
+    var stopped = (i === stopIdx);
+    var rate = stopped ? 0 : ratesPool[rateCursor++];
+    var duration = stopped ? pickR(rng, tpl.stoppedDurations) : pickR(rng, tpl.durations);
+    var distDelta = stopped ? 0 : rate * duration;
+    var prev = waypoints[waypoints.length - 1];
+    var next = { t: prev.t + duration, d: prev.d + distDelta };
+    waypoints.push(next);
+    var seg = {
+      index: i, label: labels[i],
+      p1: { t: prev.t, d: prev.d }, p2: { t: next.t, d: next.d },
+      from: { t: prev.t, d: prev.d }, to: { t: next.t, d: next.d },
+      timeDelta: duration, duration: duration,
+      distDelta: distDelta, distanceDelta: distDelta,
+      rate: segmentRate(prev, next),
+      stopped: stopped, isStopped: stopped
+    };
+    segments.push(seg);
+  }
+  return { waypoints: waypoints, segments: segments };
+}
+
+function generateGraph(rng) {
+  rng = rng || makeRng((Math.random() * 1000000000) | 0);
+  var tpl = pickR(rng, TEMPLATES);
+  var nSeg = 3 + Math.floor(rng() * 3);
+  var hasStop = rng() < 0.48;
+  var built = buildJourney(rng, tpl, nSeg, hasStop);
+  var last = built.waypoints[built.waypoints.length - 1];
+  return {
+    templateId: tpl.id, template: tpl,
+    title: tpl.title, context: tpl.context,
+    distUnit: tpl.distUnit, timeUnit: tpl.timeUnit, rateUnit: tpl.rateUnit,
+    distLabel: tpl.distLabel, timeLabel: tpl.timeLabel,
+    waypoints: built.waypoints, segments: built.segments,
+    totalTime: last.t, totalDistance: last.d,
+    hasStopped: hasStop
+  };
+}
+
+function rankSegments(segments) {
+  return segments.slice().sort(function (a, b) {
+    if (b.rate !== a.rate) return b.rate - a.rate;
+    return a.index - b.index;
+  });
+}
+
+function fastestSegment(segments) {
+  var best = null;
+  segments.forEach(function (s) {
+    if (best === null || s.rate > best.rate) best = s;
+  });
+  return best;
+}
+
+function stoppedSegments(segments) {
+  return segments.filter(function (s) { return s.distDelta === 0 || s.rate === 0; });
+}
+
+function legPhrase(tpl, rate, distDelta, timeDelta, stopped) {
+  if (stopped) {
+    if (tpl.id === "tank") return "Pause filling for " + fmtNum(timeDelta) + " " + tpl.timeUnit + " (the volume does not change)";
+    return "Stop for " + fmtNum(timeDelta) + " " + tpl.timeUnit + " (no distance is covered)";
+  }
+  if (tpl.id === "tank") return "Add " + fmtNum(distDelta) + " " + tpl.distUnit + " of water in " + fmtNum(timeDelta) + " " + tpl.timeUnit;
+  return tpl.movingWord + " " + fmtNum(distDelta) + " " + tpl.distUnit + " in " + fmtNum(timeDelta) + " " + tpl.timeUnit;
+}
+
+function generateDrawTask(rng) {
+  rng = rng || makeRng((Math.random() * 1000000000) | 0);
+  var tpl = pickR(rng, TEMPLATES);
+  var nLegs = 3 + Math.floor(rng() * 2);
+  var hasStop = rng() < 0.35;
+  var built = buildJourney(rng, tpl, nLegs, hasStop);
+  var legs = built.segments.map(function (s) {
+    return {
+      index: s.index, label: s.label,
+      p1: s.p1, p2: s.p2, from: s.from, to: s.to,
+      timeDelta: s.timeDelta, duration: s.timeDelta,
+      distDelta: s.distDelta, distanceDelta: s.distDelta,
+      rate: s.rate, stopped: s.stopped, isStopped: s.stopped,
+      description: legPhrase(tpl, s.rate, s.distDelta, s.timeDelta, s.stopped),
+      phrase: legPhrase(tpl, s.rate, s.distDelta, s.timeDelta, s.stopped)
+    };
+  });
+  var last = built.waypoints[built.waypoints.length - 1];
+  return {
+    templateId: tpl.id, template: tpl,
+    title: tpl.title, context: tpl.context,
+    distUnit: tpl.distUnit, timeUnit: tpl.timeUnit, rateUnit: tpl.rateUnit,
+    distLabel: tpl.distLabel, timeLabel: tpl.timeLabel,
+    legs: legs, segments: legs,
+    waypoints: built.waypoints, targetWaypoints: built.waypoints,
+    totalTime: last.t, totalDistance: last.d,
+    hasStopped: hasStop
+  };
+}
+
+function checkDrawnLeg(studentP1, studentP2, leg) {
+  var targetRate = leg.rate;
+  if (!studentP1 || !studentP2) {
+    return { matches: false, ok: false, studentRate: 0, targetRate: targetRate, studentTimeDelta: 0, studentDistDelta: 0 };
+  }
+  var sdt = studentP2.t - studentP1.t;
+  var sdd = studentP2.d - studentP1.d;
+  var sRate = sdt === 0 ? 0 : sdd / sdt;
+  var matches;
+  if (sdt <= 0) matches = false;
+  else if (targetRate === 0) matches = (sdd === 0);
+  else {
+    var tol = Math.max(0.5, Math.abs(targetRate) * 0.10);
+    matches = Math.abs(sRate - targetRate) <= tol + 1e-9;
+  }
+  return {
+    matches: matches, ok: matches,
+    studentRate: sRate, targetRate: targetRate,
+    studentTimeDelta: sdt, studentDistDelta: sdd,
+    difference: sRate - targetRate
+  };
+}
+// ==END GENERATOR==
+
+// ---- UI helpers ----
+
+function escapeHTML(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function fmtRate(r) { return fmtNum(Math.round(r * 10) / 10); }
+function segName(s) { return "Segment " + s.label; }
+function segDetail(graph, s) {
+  return segName(s) + ": " + fmtNum(s.distDelta) + " " + graph.distUnit + " in " + fmtNum(s.timeDelta) + " " + graph.timeUnit + " is " + fmtRate(s.rate) + " " + graph.rateUnit;
+}
+function niceStep(max, targetTicks) {
+  var steps = [0.5, 1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
+  for (var i = 0; i < steps.length; i++) {
+    var n = max / steps[i];
+    if (Math.abs(n - Math.round(n)) < 1e-9 && n >= 3 && n <= targetTicks) return steps[i];
+  }
+  for (var j = 0; j < steps.length; j++) {
+    if (max / steps[j] <= targetTicks) return steps[j];
+  }
+  return steps[steps.length - 1];
+}
+
+// ---- Chart drawing (shared geometry) ----
+
+var SVG_W = 720, SVG_H = 420;
+var ML = 68, MR = 16, MT = 30, MB = 56;
+var PLOT_W = SVG_W - ML - MR, PLOT_H = SVG_H - MT - MB;
+var BASE_Y = MT + PLOT_H;
+
+function makeScales(xMax, yMax) {
+  return {
+    xMax: xMax, yMax: yMax,
+    xStep: niceStep(xMax, 10), yStep: niceStep(yMax, 10),
+    x: function (t) { return ML + (t / xMax) * PLOT_W; },
+    y: function (d) { return BASE_Y - (d / yMax) * PLOT_H; }
+  };
+}
+function axesSVG(sc, xLabel, yLabel) {
+  var out = [];
+  var v;
+  for (v = 0; v <= sc.yMax + 1e-9; v += sc.yStep) {
+    var gy = sc.y(v);
+    out.push("<line x1=\"" + ML + "\" y1=\"" + gy + "\" x2=\"" + (ML + PLOT_W) + "\" y2=\"" + gy + "\" stroke=\"" + (Math.abs(v) < 1e-9 ? "#1c2430" : "#d4dce4") + "\" stroke-width=\"" + (Math.abs(v) < 1e-9 ? 1.5 : 1) + "\"></line>");
+    out.push("<text x=\"" + (ML - 8) + "\" y=\"" + (gy + 4) + "\" text-anchor=\"end\" font-size=\"13\">" + fmtNum(Math.round(v * 100) / 100) + "</text>");
+  }
+  for (v = 0; v <= sc.xMax + 1e-9; v += sc.xStep) {
+    var gx = sc.x(v);
+    out.push("<line x1=\"" + gx + "\" y1=\"" + MT + "\" x2=\"" + gx + "\" y2=\"" + BASE_Y + "\" stroke=\"#eef2f6\" stroke-width=\"1\"></line>");
+    out.push("<text x=\"" + gx + "\" y=\"" + (BASE_Y + 18) + "\" text-anchor=\"middle\" font-size=\"13\">" + fmtNum(Math.round(v * 100) / 100) + "</text>");
+  }
+  out.push("<line x1=\"" + ML + "\" y1=\"" + MT + "\" x2=\"" + ML + "\" y2=\"" + BASE_Y + "\" stroke=\"#1c2430\" stroke-width=\"1.5\"></line>");
+  out.push("<text x=\"" + (ML + PLOT_W / 2) + "\" y=\"" + (BASE_Y + 42) + "\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"600\">" + escapeHTML(xLabel) + "</text>");
+  out.push("<text x=\"16\" y=\"" + (MT + PLOT_H / 2) + "\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"600\" transform=\"rotate(-90 16 " + (MT + PLOT_H / 2) + ")\">" + escapeHTML(yLabel) + "</text>");
+  return out.join("");
+}
+
+// ---- State ----
+
+var graph = null;
+var selectedSeg = 0;
+var enteredRates = {};       // index -> raw string entered
+var checkedRates = {};       // index -> true once that segment rate was checked
+var revealed = {};           // index -> true once correct rate may show on the sheet
+var picksChecked = false;
+var matchTask = null;
+var drawTask = null;
+var drawnPoints = [{ t: 0, d: 0 }];
+var drawChecked = false;
+
+var readChart = document.getElementById("readChart");
+var segBtns = document.getElementById("segBtns");
+var graphTitle = document.getElementById("graphTitle");
+var graphContext = document.getElementById("graphContext");
+var waypointTable = document.getElementById("waypointTable");
+var rateSegSelect = document.getElementById("rateSegSelect");
+var rateInput = document.getElementById("rateInput");
+var rateUnitLab = document.getElementById("rateUnitLab");
+var rateFeedback = document.getElementById("rateFeedback");
+var fastestSelect = document.getElementById("fastestSelect");
+var stoppedSelect = document.getElementById("stoppedSelect");
+var picksFeedback = document.getElementById("picksFeedback");
+var matchText = document.getElementById("matchText");
+var matchChart = document.getElementById("matchChart");
+var riseRange = document.getElementById("riseRange");
+var riseLabel = document.getElementById("riseLabel");
+var riseReadout = document.getElementById("riseReadout");
+var matchFeedback = document.getElementById("matchFeedback");
+var drawChart = document.getElementById("drawChart");
+var drawTitle = document.getElementById("drawTitle");
+var drawIntro = document.getElementById("drawIntro");
+var drawLegsList = document.getElementById("drawLegsList");
+var drawSnapHint = document.getElementById("drawSnapHint");
+var drawStatus = document.getElementById("drawStatus");
+var drawFeedback = document.getElementById("drawFeedback");
+var drawInputs = document.getElementById("drawInputs");
+var inputsFeedback = document.getElementById("inputsFeedback");
+var sheetMeta = document.getElementById("sheetMeta");
+var sheetContext = document.getElementById("sheetContext");
+var sheetTable = document.getElementById("sheetTable");
+var sheetPicks = document.getElementById("sheetPicks");
+var sheetRanking = document.getElementById("sheetRanking");
+
+// ---- Read and Rank mode ----
+
+function renderReadChart() {
+  var sc = makeScales(graph.totalTime, graph.totalDistance);
+  var out = [axesSVG(sc, graph.timeLabel, graph.distLabel)];
+  graph.segments.forEach(function (s) {
+    var sel = s.index === selectedSeg;
+    out.push("<line x1=\"" + sc.x(s.p1.t) + "\" y1=\"" + sc.y(s.p1.d) + "\" x2=\"" + sc.x(s.p2.t) + "\" y2=\"" + sc.y(s.p2.d) +
+      "\" stroke=\"" + (sel ? "#b45309" : "#0b5cad") + "\" stroke-width=\"" + (sel ? 5 : 3) + "\" stroke-linecap=\"round\"></line>");
+    out.push("<line class=\"seghit\" data-seg=\"" + s.index + "\" x1=\"" + sc.x(s.p1.t) + "\" y1=\"" + sc.y(s.p1.d) + "\" x2=\"" + sc.x(s.p2.t) + "\" y2=\"" + sc.y(s.p2.d) +
+      "\" stroke=\"transparent\" stroke-width=\"18\"><title>" + escapeHTML(segName(s)) + "</title></line>");
+    var mx = (sc.x(s.p1.t) + sc.x(s.p2.t)) / 2;
+    var my = (sc.y(s.p1.d) + sc.y(s.p2.d)) / 2;
+    out.push("<text x=\"" + mx + "\" y=\"" + (my - 10) + "\" text-anchor=\"middle\" font-size=\"15\" font-weight=\"700\" fill=\"" + (sel ? "#b45309" : "#0b5cad") + "\">" + s.label + "</text>");
+  });
+  graph.waypoints.forEach(function (p) {
+    out.push("<circle cx=\"" + sc.x(p.t) + "\" cy=\"" + sc.y(p.d) + "\" r=\"5\" fill=\"#ffffff\" stroke=\"#1c2430\" stroke-width=\"2\"></circle>");
+  });
+  readChart.innerHTML = out.join("");
+  readChart.querySelectorAll(".seghit").forEach(function (el) {
+    el.addEventListener("click", function () { selectSegment(parseInt(el.getAttribute("data-seg"), 10)); });
+  });
+}
+
+function selectSegment(i) {
+  selectedSeg = i;
+  rateSegSelect.value = String(i);
+  renderReadChart();
+  renderSegBtns();
+}
+
+function renderSegBtns() {
+  segBtns.innerHTML = "";
+  graph.segments.forEach(function (s) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "secondary" + (s.index === selectedSeg ? " selected" : "");
+    b.textContent = segName(s) + " (" + fmtNum(s.p1.t) + " to " + fmtNum(s.p2.t) + " " + graph.timeUnit + ")";
+    b.setAttribute("aria-pressed", String(s.index === selectedSeg));
+    b.addEventListener("click", function () { selectSegment(s.index); });
+    segBtns.appendChild(b);
+  });
+}
+
+function renderReadTables() {
+  var rows = ["<tr><th scope=\"col\">Point</th><th scope=\"col\">" + escapeHTML(graph.timeLabel) + "</th><th scope=\"col\">" + escapeHTML(graph.distLabel) + "</th></tr>"];
+  graph.waypoints.forEach(function (p, i) {
+    rows.push("<tr><td>" + (i + 1) + "</td><td>" + fmtNum(p.t) + "</td><td>" + fmtNum(p.d) + "</td></tr>");
+  });
+  waypointTable.innerHTML = rows.join("");
+
+  rateSegSelect.innerHTML = "";
+  fastestSelect.innerHTML = "";
+  graph.segments.forEach(function (s) {
+    var o1 = document.createElement("option"); o1.value = String(s.index); o1.textContent = segName(s);
+    rateSegSelect.appendChild(o1);
+    var o2 = document.createElement("option"); o2.value = String(s.index); o2.textContent = segName(s);
+    fastestSelect.appendChild(o2);
+  });
+  stoppedSelect.innerHTML = "";
+  var none = document.createElement("option"); none.value = "none"; none.textContent = "No segment is stopped";
+  stoppedSelect.appendChild(none);
+  graph.segments.forEach(function (s) {
+    var o = document.createElement("option"); o.value = String(s.index); o.textContent = segName(s);
+    stoppedSelect.appendChild(o);
+  });
+  rateSegSelect.value = String(selectedSeg);
+  rateUnitLab.textContent = graph.rateUnit;
+}
+
+function updateSheet() {
+  sheetMeta.textContent = graph.title + ", Math 2201 Unit 6, indicators 6.15, 6.18 and 6.19";
+  sheetContext.textContent = graph.context;
+  var rows = ["<tr><th scope=\"col\">Segment</th><th scope=\"col\">Change in time</th><th scope=\"col\">Change in distance</th><th scope=\"col\">Your rate</th><th scope=\"col\">Checked rate</th></tr>"];
+  graph.segments.forEach(function (s) {
+    var yours = enteredRates[s.index] !== undefined && enteredRates[s.index] !== "" ? escapeHTML(enteredRates[s.index]) + " " + graph.rateUnit : "Not entered yet";
+    var correct = revealed[s.index] ? fmtRate(s.rate) + " " + graph.rateUnit : "Check in the app to reveal";
+    rows.push("<tr><td>" + segName(s) + "</td><td>" + fmtNum(s.timeDelta) + " " + graph.timeUnit + "</td><td>" + fmtNum(s.distDelta) + " " + graph.distUnit + "</td><td>" + yours + "</td><td>" + correct + "</td></tr>");
+  });
+  sheetTable.innerHTML = rows.join("");
+  if (picksChecked) {
+    var f = fastestSegment(graph.segments);
+    var stops = stoppedSegments(graph.segments);
+    var stopText = stops.length ? stops.map(function (s) { return segName(s); }).join(", ") : "none";
+    sheetPicks.textContent = "Your choices: fastest was " + segName(graph.segments[parseInt(fastestSelect.value, 10)]) +
+      ", stopped was " + (stoppedSelect.value === "none" ? "no segment" : segName(graph.segments[parseInt(stoppedSelect.value, 10)])) +
+      ". Checked answer: fastest is " + segName(f) + " at " + fmtRate(f.rate) + " " + graph.rateUnit + ", and the stopped segment is " + stopText + ".";
+    var ranked = rankSegments(graph.segments).map(function (s) { return segName(s) + " (" + fmtRate(s.rate) + " " + graph.rateUnit + ")"; });
+    sheetRanking.textContent = "Segments ranked fastest to slowest: " + ranked.join(", ") + ".";
+  } else {
+    sheetPicks.textContent = "Fastest and stopped choices: check Task 2 in the app and they will be recorded here.";
+    sheetRanking.textContent = "";
+  }
+}
+
+function loadGraph() {
+  graph = generateGraph();
+  selectedSeg = 0;
+  enteredRates = {}; checkedRates = {}; revealed = {}; picksChecked = false;
+  graphTitle.textContent = graph.title;
+  graphContext.textContent = graph.context;
+  rateInput.value = "";
+  rateFeedback.textContent = ""; rateFeedback.className = "feedback";
+  picksFeedback.textContent = ""; picksFeedback.className = "feedback";
+  renderReadTables();
+  renderReadChart();
+  renderSegBtns();
+  setupMatchTask();
+  updateSheet();
+}
+
+function checkRate() {
+  var s = graph.segments[selectedSeg];
+  var raw = rateInput.value.trim();
+  enteredRates[s.index] = raw;
+  var v = parseFloat(raw);
+  if (raw === "" || isNaN(v)) {
+    rateFeedback.className = "feedback bad";
+    rateFeedback.textContent = "Enter a number for the rate first.";
+    updateSheet();
+    return;
+  }
+  checkedRates[s.index] = true;
+  revealed[s.index] = true;
+  var worked = segDetail(graph, s) + ". Rate = " + fmtNum(s.distDelta) + " " + graph.distUnit + " divided by " + fmtNum(s.timeDelta) + " " + graph.timeUnit + ".";
+  if (Math.abs(v - s.rate) <= 0.51) {
+    rateFeedback.className = "feedback ok";
+    rateFeedback.textContent = "That matches. " + worked;
+  } else {
+    rateFeedback.className = "feedback bad";
+    rateFeedback.textContent = "Not quite, try again with the two ends of the segment. " + worked + " Watch out: judge by steepness and by the changes at the ends, not by how long the line looks on the page.";
+  }
+  updateSheet();
+}
+
+function checkPicks() {
+  picksChecked = true;
+  graph.segments.forEach(function (s) { revealed[s.index] = true; });
+  var f = fastestSegment(graph.segments);
+  var stops = stoppedSegments(graph.segments);
+  var fastestOk = parseInt(fastestSelect.value, 10) === f.index;
+  var stoppedOk;
+  if (stops.length === 0) stoppedOk = stoppedSelect.value === "none";
+  else stoppedOk = stops.some(function (s) { return String(s.index) === stoppedSelect.value; });
+  var stopText = stops.length ? stops.map(function (s) { return segName(s) + " is flat, so its rate is 0 " + graph.rateUnit; }).join("; ") : "No segment is flat in this graph, so no segment is stopped";
+  if (fastestOk && stoppedOk) {
+    picksFeedback.className = "feedback ok";
+    picksFeedback.textContent = "Both choices match. Fastest: " + segDetail(graph, f) + ". " + stopText + ".";
+  } else {
+    picksFeedback.className = "feedback bad";
+    var parts = [];
+    if (!fastestOk) parts.push("Fastest is " + segName(f) + ": " + segDetail(graph, f) + ". A segment can look longer on the page because it lasts longer, and still be slower. Compare steepness, which is distance change divided by time change.");
+    else parts.push("Your fastest choice matches: " + segDetail(graph, f) + ".");
+    if (!stoppedOk) parts.push("For stopped: " + stopText + ". Forgetting a flat segment is a common slip: flat means stopped, even though the line is still there on the page.");
+    else parts.push("Your stopped choice matches. " + stopText + ".");
+    picksFeedback.textContent = parts.join(" ");
+  }
+  updateSheet();
+}
+
+// ---- Match a rate (adjust the steepness) ----
+
+function setupMatchTask() {
+  var tpl = graph.template;
+  var rate = tpl.rates[Math.floor(Math.random() * tpl.rates.length)];
+  var run = tpl.durations[Math.floor(Math.random() * tpl.durations.length)];
+  if (tpl.id === "hike" && rate * run % 0.5 !== 0) run = 1;
+  var needed = rate * run;
+  var maxRise = Math.ceil((needed * 1.8) / tpl.snapDist) * tpl.snapDist;
+  if (maxRise <= needed) maxRise = needed + tpl.snapDist * 4;
+  matchTask = { rate: rate, run: run, needed: needed, maxRise: maxRise, tpl: tpl };
+  riseRange.min = "0";
+  riseRange.max = String(maxRise);
+  riseRange.step = String(tpl.snapDist);
+  riseRange.value = "0";
+  riseLabel.textContent = "Distance (" + tpl.distUnit + ") covered in " + fmtNum(run) + " " + tpl.timeUnit;
+  matchText.textContent = "Make a line that rises at " + fmtRate(rate) + " " + tpl.rateUnit + ". Its time is fixed at " + fmtNum(run) + " " + tpl.timeUnit + ", so drag the slider to choose how much distance it covers in that time. Steeper means faster.";
+  matchFeedback.textContent = ""; matchFeedback.className = "feedback";
+  renderMatchChart();
+}
+
+function renderMatchChart() {
+  var rise = parseFloat(riseRange.value);
+  riseReadout.textContent = fmtNum(rise) + " " + matchTask.tpl.distUnit + ", so your rate is " + fmtRate(matchTask.run === 0 ? 0 : rise / matchTask.run) + " " + matchTask.tpl.rateUnit;
+  var MW = 520, MH = 300, MML = 64, MMR = 16, MMT = 24, MMB = 48;
+  var PW = MW - MML - MMR, PH = MH - MMT - MMB, BY = MMT + PH;
+  var x = MML + PW;
+  var y = BY - (rise / matchTask.maxRise) * PH;
+  var out = [];
+  for (var v = 0; v <= matchTask.maxRise + 1e-9; v += niceStep(matchTask.maxRise, 6)) {
+    var gy = BY - (v / matchTask.maxRise) * PH;
+    out.push("<line x1=\"" + MML + "\" y1=\"" + gy + "\" x2=\"" + (MML + PW) + "\" y2=\"" + gy + "\" stroke=\"" + (v === 0 ? "#1c2430" : "#d4dce4") + "\"></line>");
+    out.push("<text x=\"" + (MML - 8) + "\" y=\"" + (gy + 4) + "\" text-anchor=\"end\" font-size=\"13\">" + fmtNum(v) + "</text>");
+  }
+  out.push("<line x1=\"" + MML + "\" y1=\"" + MMT + "\" x2=\"" + MML + "\" y2=\"" + BY + "\" stroke=\"#1c2430\" stroke-width=\"1.5\"></line>");
+  out.push("<line x1=\"" + MML + "\" y1=\"" + BY + "\" x2=\"" + x + "\" y2=\"" + y + "\" stroke=\"#0b5cad\" stroke-width=\"4\" stroke-linecap=\"round\"></line>");
+  out.push("<circle cx=\"" + x + "\" cy=\"" + y + "\" r=\"6\" fill=\"#0b5cad\" stroke=\"#ffffff\" stroke-width=\"2\"></circle>");
+  out.push("<text x=\"" + (MML + PW / 2) + "\" y=\"" + (BY + 36) + "\" text-anchor=\"middle\" font-size=\"14\" font-weight=\"600\">Time: 0 to " + fmtNum(matchTask.run) + " " + matchTask.tpl.timeUnit + "</text>");
+  out.push("<text x=\"15\" y=\"" + (MMT + PH / 2) + "\" text-anchor=\"middle\" font-size=\"13\" font-weight=\"600\" transform=\"rotate(-90 15 " + (MMT + PH / 2) + ")\">Distance (" + matchTask.tpl.distUnit + ")</text>");
+  matchChart.innerHTML = out.join("");
+}
+
+function checkMatch() {
+  var rise = parseFloat(riseRange.value);
+  var yourRate = rise / matchTask.run;
+  if (Math.abs(yourRate - matchTask.rate) <= 0.51) {
+    matchFeedback.className = "feedback ok";
+    matchFeedback.textContent = "That matches. " + fmtNum(rise) + " " + matchTask.tpl.distUnit + " in " + fmtNum(matchTask.run) + " " + matchTask.tpl.timeUnit + " is " + fmtRate(matchTask.rate) + " " + matchTask.tpl.rateUnit + ".";
+  } else {
+    matchFeedback.className = "feedback bad";
+    matchFeedback.textContent = "Not yet. Your line gives " + fmtNum(rise) + " " + matchTask.tpl.distUnit + " in " + fmtNum(matchTask.run) + " " + matchTask.tpl.timeUnit + ", which is " + fmtRate(yourRate) + " " + matchTask.tpl.rateUnit + ". The target is " + fmtRate(matchTask.rate) + " " + matchTask.tpl.rateUnit + (yourRate < matchTask.rate ? ", so make the line steeper: more distance in the same time." : ", so make the line less steep: less distance in the same time.");
+  }
+}
+
+// ---- Draw mode ----
+
+function renderDrawChart() {
+  var sc = makeScales(drawTask.totalTime, drawTask.totalDistance);
+  var out = [axesSVG(sc, drawTask.timeLabel, drawTask.distLabel)];
+  if (drawChecked) {
+    var pts = drawTask.targetWaypoints.map(function (p) { return sc.x(p.t) + "," + sc.y(p.d); }).join(" ");
+    out.push("<polyline points=\"" + pts + "\" fill=\"none\" stroke=\"#177245\" stroke-width=\"3\" stroke-dasharray=\"8 5\"></polyline>");
+    drawTask.targetWaypoints.forEach(function (p) {
+      out.push("<circle cx=\"" + sc.x(p.t) + "\" cy=\"" + sc.y(p.d) + "\" r=\"5\" fill=\"none\" stroke=\"#177245\" stroke-width=\"2\"></circle>");
+    });
+  }
+  if (drawnPoints.length > 1) {
+    var pts2 = drawnPoints.map(function (p) { return sc.x(p.t) + "," + sc.y(p.d); }).join(" ");
+    out.push("<polyline points=\"" + pts2 + "\" fill=\"none\" stroke=\"#0b5cad\" stroke-width=\"3\"></polyline>");
+  }
+  drawnPoints.forEach(function (p) {
+    out.push("<circle cx=\"" + sc.x(p.t) + "\" cy=\"" + sc.y(p.d) + "\" r=\"6\" fill=\"#0b5cad\" stroke=\"#ffffff\" stroke-width=\"2\"></circle>");
+  });
+  out.push("<rect id=\"drawHit\" x=\"" + ML + "\" y=\"" + MT + "\" width=\"" + PLOT_W + "\" height=\"" + PLOT_H + "\" fill=\"transparent\" style=\"cursor:pointer\"></rect>");
+  drawChart.innerHTML = out.join("");
+  var hit = document.getElementById("drawHit");
+  hit.addEventListener("click", onDrawClick);
+  var need = drawTask.legs.length;
+  drawStatus.textContent = drawnPoints.length - 1 >= need
+    ? "You have placed all " + need + " points. Check your graph, or undo a point and place it again."
+    : "Points placed: " + (drawnPoints.length - 1) + " of " + need + ". Select the grid to place the end of leg " + drawTask.legs[drawnPoints.length - 1].label + ".";
+}
+
+function onDrawClick(ev) {
+  if (drawnPoints.length - 1 >= drawTask.legs.length) return;
+  var rect = drawChart.getBoundingClientRect();
+  var sx = (ev.clientX - rect.left) * (SVG_W / rect.width);
+  var sy = (ev.clientY - rect.top) * (SVG_H / rect.height);
+  var sc = makeScales(drawTask.totalTime, drawTask.totalDistance);
+  var tRaw = ((sx - ML) / PLOT_W) * sc.xMax;
+  var dRaw = ((BASE_Y - sy) / PLOT_H) * sc.yMax;
+  var tpl = drawTask.template;
+  var t = Math.round(tRaw / tpl.snapTime) * tpl.snapTime;
+  var d = Math.round(dRaw / tpl.snapDist) * tpl.snapDist;
+  var prev = drawnPoints[drawnPoints.length - 1];
+  t = Math.max(prev.t + tpl.snapTime, Math.min(sc.xMax, t));
+  d = Math.max(prev.d, Math.min(sc.yMax, d));
+  t = Math.round(t * 100) / 100; d = Math.round(d * 100) / 100;
+  drawnPoints.push({ t: t, d: d });
+  drawChecked = false;
+  drawFeedback.innerHTML = "";
+  syncDrawInputs();
+  renderDrawChart();
+}
+
+function buildDrawInputs() {
+  drawInputs.innerHTML = "";
+  drawTask.legs.forEach(function (leg, i) {
+    var row = document.createElement("div");
+    row.className = "fieldsrow";
+    var title = document.createElement("span");
+    title.className = "unitlab";
+    title.textContent = "End of leg " + leg.label + ":";
+    row.appendChild(title);
+    var f1 = document.createElement("div"); f1.className = "field";
+    var l1 = document.createElement("label"); l1.textContent = "Time (" + drawTask.timeUnit + ")"; l1.setAttribute("for", "din-t-" + i);
+    var in1 = document.createElement("input"); in1.type = "number"; in1.className = "timein"; in1.id = "din-t-" + i;
+    in1.step = String(drawTask.template.snapTime); in1.min = "0";
+    f1.appendChild(l1); f1.appendChild(in1); row.appendChild(f1);
+    var f2 = document.createElement("div"); f2.className = "field";
+    var l2 = document.createElement("label"); l2.textContent = "Distance (" + drawTask.distUnit + ")"; l2.setAttribute("for", "din-d-" + i);
+    var in2 = document.createElement("input"); in2.type = "number"; in2.className = "distin"; in2.id = "din-d-" + i;
+    in2.step = String(drawTask.template.snapDist); in2.min = "0";
+    f2.appendChild(l2); f2.appendChild(in2); row.appendChild(f2);
+    drawInputs.appendChild(row);
+  });
+}
+
+function syncDrawInputs() {
+  drawTask.legs.forEach(function (leg, i) {
+    var ti = document.getElementById("din-t-" + i);
+    var di = document.getElementById("din-d-" + i);
+    if (!ti || !di) return;
+    var p = drawnPoints[i + 1];
+    ti.value = p ? String(p.t) : "";
+    di.value = p ? String(p.d) : "";
+  });
+}
+
+function applyInputs() {
+  var pts = [{ t: 0, d: 0 }];
+  var ok = true, msg = "";
+  for (var i = 0; i < drawTask.legs.length; i++) {
+    var tv = parseFloat(document.getElementById("din-t-" + i).value);
+    var dv = parseFloat(document.getElementById("din-d-" + i).value);
+    if (isNaN(tv) || isNaN(dv)) { ok = false; msg = "Fill in both numbers for every leg."; break; }
+    if (tv <= pts[pts.length - 1].t) { ok = false; msg = "Times must keep increasing: check leg " + drawTask.legs[i].label + "."; break; }
+    if (dv < pts[pts.length - 1].d) { ok = false; msg = "Distance does not go down on these graphs: check leg " + drawTask.legs[i].label + "."; break; }
+    pts.push({ t: tv, d: dv });
+  }
+  if (!ok) {
+    inputsFeedback.className = "feedback bad";
+    inputsFeedback.textContent = msg;
+    return;
+  }
+  inputsFeedback.className = "feedback ok";
+  inputsFeedback.textContent = "Points placed from your numbers. Now check your graph.";
+  drawnPoints = pts;
+  drawChecked = false;
+  drawFeedback.innerHTML = "";
+  renderDrawChart();
+}
+
+function loadDrawTask() {
+  drawTask = generateDrawTask();
+  drawnPoints = [{ t: 0, d: 0 }];
+  drawChecked = false;
+  drawTitle.textContent = "Draw: " + drawTask.title;
+  drawIntro.textContent = drawTask.context + " Build the graph leg by leg, in order. Start at time 0 and distance 0, which is already placed for you.";
+  drawLegsList.innerHTML = "";
+  drawTask.legs.forEach(function (leg) {
+    var li = document.createElement("li");
+    li.textContent = "Leg " + leg.label + ": " + leg.description + ".";
+    drawLegsList.appendChild(li);
+  });
+  drawSnapHint.textContent = "Points snap to the grid: time in steps of " + fmtNum(drawTask.template.snapTime) + " " + drawTask.timeUnit + ", distance in steps of " + fmtNum(drawTask.template.snapDist) + " " + drawTask.distUnit + ". The dashed line after you check is the described graph.";
+  drawFeedback.innerHTML = "";
+  inputsFeedback.textContent = ""; inputsFeedback.className = "feedback";
+  buildDrawInputs();
+  renderDrawChart();
+}
+
+function checkDraw() {
+  if (drawnPoints.length - 1 < drawTask.legs.length) {
+    drawFeedback.className = "feedback bad";
+    drawFeedback.textContent = "Place a point for every leg first: you have " + (drawnPoints.length - 1) + " of " + drawTask.legs.length + ".";
+    return;
+  }
+  drawChecked = true;
+  renderDrawChart();
+  var lines = [];
+  var allMatch = true;
+  drawTask.legs.forEach(function (leg, i) {
+    var res = checkDrawnLeg(drawnPoints[i], drawnPoints[i + 1], leg);
+    if (!res.matches) allMatch = false;
+    var li = document.createElement("li");
+    if (res.matches) {
+      li.textContent = "Leg " + leg.label + ": matches. Your segment rate is " + fmtRate(res.studentRate) + " " + drawTask.rateUnit + ", and the described rate is " + fmtRate(leg.rate) + " " + drawTask.rateUnit + " (" + leg.description + ").";
+    } else if (leg.rate === 0) {
+      li.textContent = "Leg " + leg.label + ": not yet. This leg is a stop, so your segment should be flat with a rate of 0 " + drawTask.rateUnit + ". Your segment covers " + fmtNum(res.studentDistDelta) + " " + drawTask.distUnit + ", giving " + fmtRate(res.studentRate) + " " + drawTask.rateUnit + ".";
+    } else {
+      li.textContent = "Leg " + leg.label + ": not yet. Your segment rate is " + fmtRate(res.studentRate) + " " + drawTask.rateUnit + " (" + fmtNum(res.studentDistDelta) + " " + drawTask.distUnit + " in " + fmtNum(res.studentTimeDelta) + " " + drawTask.timeUnit + "), and the described rate is " + fmtRate(leg.rate) + " " + drawTask.rateUnit + " (" + leg.description + "). Adjust the end point of this leg and check again.";
+    }
+    lines.push(li);
+  });
+  drawFeedback.className = "feedback " + (allMatch ? "ok" : "bad");
+  drawFeedback.innerHTML = "";
+  var head = document.createElement("p");
+  head.textContent = allMatch ? "Your graph matches the description on every leg. Compare it with the dashed described graph." : "The dashed line is the described graph. Here is the leg by leg comparison:";
+  drawFeedback.appendChild(head);
+  var ul = document.createElement("ul");
+  lines.forEach(function (li) { ul.appendChild(li); });
+  drawFeedback.appendChild(ul);
+}
+
+// ---- Mode switching and events ----
+
+var readSection = document.getElementById("readSection");
+var drawSection = document.getElementById("drawSection");
+var modeReadBtn = document.getElementById("modeReadBtn");
+var modeDrawBtn = document.getElementById("modeDrawBtn");
+
+function setMode(draw) {
+  readSection.classList.toggle("hidden", draw);
+  drawSection.classList.toggle("hidden", !draw);
+  document.getElementById("printSheet").classList.toggle("hidden", draw);
+  modeReadBtn.setAttribute("aria-pressed", String(!draw));
+  modeDrawBtn.setAttribute("aria-pressed", String(draw));
+}
+modeReadBtn.addEventListener("click", function () { setMode(false); });
+modeDrawBtn.addEventListener("click", function () { setMode(true); });
+
+document.getElementById("newGraphBtn").addEventListener("click", loadGraph);
+rateSegSelect.addEventListener("change", function () { selectSegment(parseInt(rateSegSelect.value, 10)); });
+document.getElementById("checkRateBtn").addEventListener("click", checkRate);
+document.getElementById("checkPicksBtn").addEventListener("click", checkPicks);
+riseRange.addEventListener("input", renderMatchChart);
+document.getElementById("checkMatchBtn").addEventListener("click", checkMatch);
+document.getElementById("newMatchBtn").addEventListener("click", setupMatchTask);
+
+document.getElementById("newDrawBtn").addEventListener("click", loadDrawTask);
+document.getElementById("undoPointBtn").addEventListener("click", function () {
+  if (drawnPoints.length > 1) { drawnPoints.pop(); drawChecked = false; drawFeedback.innerHTML = ""; syncDrawInputs(); renderDrawChart(); }
+});
+document.getElementById("clearDrawBtn").addEventListener("click", function () {
+  drawnPoints = [{ t: 0, d: 0 }]; drawChecked = false; drawFeedback.innerHTML = ""; syncDrawInputs(); renderDrawChart();
+});
+document.getElementById("checkDrawBtn").addEventListener("click", checkDraw);
+document.getElementById("applyInputsBtn").addEventListener("click", applyInputs);
+
+function doPrint() { window.print(); }
+document.getElementById("printBtn").addEventListener("click", doPrint);
+document.getElementById("printBtnTop").addEventListener("click", function () { setMode(false); window.print(); });
+
+loadGraph();
+loadDrawTask();
+</script>
+</body>
+</html>
